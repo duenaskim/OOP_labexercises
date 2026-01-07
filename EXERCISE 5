@@ -1,0 +1,234 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+import javax.swing.*;
+
+public class MathTrainer extends JFrame implements ActionListener, ComponentListener {
+
+    private JTextField firstNumField, secondNumField, inputAnswer;
+    private JLabel symbolLabel, rightCountLbl, wrongCountLbl;
+    private JLabel headerLbl, statsLbl, rightLbl, wrongLbl, levelLbl, operationLbl, greetingLbl;
+
+    private JRadioButton plusBtn, minusBtn, timesBtn, divideBtn;
+    private JButton checkBtn;
+    private JComboBox<String> difficultyBox;
+    private JPanel equationPanel;
+
+    private ButtonGroup operatorGroup;
+    private Random randomizer = new Random();
+
+    private int correctTotal = 0;
+    private int wrongTotal = 0;
+    private int difficulty = 1;
+    private char currentOperator = ' ';
+    private String username;
+
+    public MathTrainer() {
+        setTitle("Math Trainer");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(null);
+        setMinimumSize(new Dimension(900, 600));
+        setLocationRelativeTo(null);
+        getContentPane().setBackground(new Color(240, 242, 245));
+        addComponentListener(this);
+
+        username = JOptionPane.showInputDialog(this, "Enter player name:", "User Login", JOptionPane.PLAIN_MESSAGE);
+        if (username == null || username.trim().isEmpty()) {
+            username = "Guest";
+        }
+
+        initializeUI();
+        setVisible(true);
+    }
+
+    private void initializeUI() {
+
+        headerLbl = new JLabel("Math Challenge", SwingConstants.CENTER);
+        headerLbl.setFont(new Font("Arial", Font.BOLD, 34));
+        headerLbl.setForeground(new Color(30, 45, 80));
+        add(headerLbl);
+
+        greetingLbl = new JLabel("Hello, " + username + "!", SwingConstants.CENTER);
+        greetingLbl.setFont(new Font("Arial", Font.BOLD, 20));
+        add(greetingLbl);
+
+        levelLbl = new JLabel("Difficulty:");
+        levelLbl.setFont(new Font("Arial", Font.BOLD, 18));
+        add(levelLbl);
+
+        difficultyBox = new JComboBox<>(new String[]{"Easy", "Medium", "Hard"});
+        difficultyBox.setFont(new Font("Arial", Font.PLAIN, 16));
+        difficultyBox.addActionListener(e -> {
+            difficulty = difficultyBox.getSelectedIndex() + 1;
+            createNumbers();
+        });
+        add(difficultyBox);
+
+        operationLbl = new JLabel("Choose Operation");
+        operationLbl.setFont(new Font("Arial", Font.BOLD, 18));
+        add(operationLbl);
+
+        plusBtn = new JRadioButton("Add");
+        minusBtn = new JRadioButton("Subtract");
+        timesBtn = new JRadioButton("Multiply");
+        divideBtn = new JRadioButton("Divide");
+
+        operatorGroup = new ButtonGroup();
+        JRadioButton[] buttons = {plusBtn, minusBtn, timesBtn, divideBtn};
+        char[] operators = {'+', '-', '*', '/'};
+
+        for (int i = 0; i < buttons.length; i++) {
+            int index = i;
+            buttons[i].setBackground(getContentPane().getBackground());
+            buttons[i].setFont(new Font("Arial", Font.PLAIN, 16));
+            buttons[i].addActionListener(e -> {
+                currentOperator = operators[index];
+                symbolLabel.setText(String.valueOf(currentOperator));
+                createNumbers();
+            });
+            operatorGroup.add(buttons[i]);
+            add(buttons[i]);
+        }
+
+        equationPanel = new JPanel(null);
+        equationPanel.setBackground(Color.WHITE);
+        equationPanel.setBorder(BorderFactory.createLineBorder(Color.GRAY, 2));
+        add(equationPanel);
+
+        firstNumField = createTextBox();
+        secondNumField = createTextBox();
+        inputAnswer = createTextBox();
+        inputAnswer.addActionListener(this);
+
+        symbolLabel = new JLabel("", SwingConstants.CENTER);
+        symbolLabel.setFont(new Font("Arial", Font.BOLD, 36));
+
+        JLabel equalsSign = new JLabel("=");
+        equalsSign.setFont(new Font("Arial", Font.BOLD, 36));
+
+        equationPanel.add(firstNumField);
+        equationPanel.add(symbolLabel);
+        equationPanel.add(secondNumField);
+        equationPanel.add(equalsSign);
+        equationPanel.add(inputAnswer);
+
+        statsLbl = new JLabel("Score", SwingConstants.LEFT);
+        statsLbl.setFont(new Font("Arial", Font.BOLD, 20));
+        add(statsLbl);
+
+        rightLbl = new JLabel("Correct:");
+        wrongLbl = new JLabel("Wrong:");
+        add(rightLbl);
+        add(wrongLbl);
+
+        rightCountLbl = scoreBox(new Color(200, 255, 200));
+        wrongCountLbl = scoreBox(new Color(255, 200, 200));
+
+        add(rightCountLbl);
+        add(wrongCountLbl);
+
+        checkBtn = new JButton("Check");
+        checkBtn.setFont(new Font("Arial", Font.BOLD, 18));
+        checkBtn.setBackground(new Color(70, 130, 255));
+        checkBtn.setForeground(Color.WHITE);
+        checkBtn.addActionListener(this);
+        add(checkBtn);
+
+        adjustLayout();
+    }
+
+    private JTextField createTextBox() {
+        JTextField tf = new JTextField();
+        tf.setFont(new Font("Arial", Font.BOLD, 26));
+        tf.setHorizontalAlignment(JTextField.CENTER);
+        return tf;
+    }
+
+    private JLabel scoreBox(Color bg) {
+        JLabel lbl = new JLabel("0", SwingConstants.CENTER);
+        lbl.setOpaque(true);
+        lbl.setBackground(bg);
+        lbl.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        return lbl;
+    }
+
+    private void adjustLayout() {
+        int w = getWidth();
+        int h = getHeight();
+
+        headerLbl.setBounds(0, h / 30, w, 50);
+        greetingLbl.setBounds(0, h / 10, w, 25);
+
+        levelLbl.setBounds(w / 12, h / 5, 150, 30);
+        difficultyBox.setBounds(w / 6, h / 5, 150, 30);
+
+        operationLbl.setBounds(w / 12, h / 4, 200, 30);
+
+        int y = h / 3;
+        for (Component c : getContentPane().getComponents()) {
+            if (c instanceof JRadioButton) {
+                c.setBounds(w / 12, y, 200, 25);
+                y += 30;
+            }
+        }
+
+        equationPanel.setBounds(w / 3, h / 4, w / 2, h / 4);
+
+        Component[] parts = equationPanel.getComponents();
+        int mw = equationPanel.getWidth();
+        int mh = equationPanel.getHeight();
+
+        for (int i = 0; i < parts.length; i++) {
+            parts[i].setBounds((int)(mw * (0.05 + i * 0.18)), mh / 4, mw / 6, mh / 2);
+        }
+
+        checkBtn.setBounds(w / 2 - 60, h * 3 / 5, 120, 45);
+
+        statsLbl.setBounds(w / 12, h * 2 / 3, 200, 30);
+        rightLbl.setBounds(w / 12, h * 3 / 4, 100, 25);
+        rightCountLbl.setBounds(w / 6, h * 3 / 4, 60, 25);
+        wrongLbl.setBounds(w / 12, h * 4 / 5, 100, 25);
+        wrongCountLbl.setBounds(w / 6, h * 4 / 5, 60, 25);
+    }
+
+    private void createNumbers() {
+        int limit = difficulty == 3 ? 100 : difficulty == 2 ? 50 : 10;
+        firstNumField.setText(String.valueOf(randomizer.nextInt(limit) + 1));
+        secondNumField.setText(String.valueOf(randomizer.nextInt(limit) + 1));
+        inputAnswer.setText("");
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        try {
+            double a = Double.parseDouble(firstNumField.getText());
+            double b = Double.parseDouble(secondNumField.getText());
+            double userAnswer = Double.parseDouble(inputAnswer.getText());
+            double result;
+
+            switch (currentOperator) {
+                case '+': result = a + b; break;
+                case '-': result = a - b; break;
+                case '*': result = a * b; break;
+                case '/': result = b != 0 ? a / b : Double.NaN; break;
+                default:
+                    JOptionPane.showMessageDialog(this, "Select an operation.");
+                    return;
+            }
+
+            if (Math.abs(userAnswer - result) < 0.001) {
+                rightCountLbl.setText(String.valueOf(++correctTotal));
+            } else {
+                wrongCountLbl.setText(String.valueOf(++wrongTotal));
+            }
+
+            createNumbers();
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid input.");
+        }
+    }
+
+    @Override public void componentResized(ComponentEvent e) { adjustLayout(); }
+    @Override public void componentMoved(ComponentEvent e) {}
+    @Override public void componentShown(Compon
+
